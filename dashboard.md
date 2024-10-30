@@ -106,29 +106,43 @@
     <tr>
       <th>Form No</th>
       <th>Title</th>
-      <th>Submitted Date</th>
+      <th>Client Submitted Date</th> <!-- New column for Client Submitted Date -->
+      <th>Submitted Date</th> <!-- Admin Submitted Date -->
       <th>Pending Days</th>
       <th>Actions</th>
     </tr>
-    <!-- Example row with placeholder dates -->
+    <!-- Example rows with placeholder dates -->
     <tr>
       <td>123</td>
       <td>Request Title A</td>
-      <td class="submitted-date">2024-10-01</td>
+      <td class="client-submitted-date">2024-10-01</td> <!-- Client submitted date -->
+      <td class="submitted-date">2024-10-10</td> <!-- Admin submitted date -->
       <td class="pending-days"></td>
       <td class="action-buttons">
         <button class="accept" onclick="acceptRequest(123)">Accept</button>
-        <button class="reject" onclick="rejectRequest(123)">Reject</button>
+        <button class="reject" onclick="rejectRequest(124)">Reject</button>
       </td>
     </tr>
     <tr>
       <td>124</td>
       <td>Request Title B</td>
-      <td class="submitted-date">2024-10-15</td>
+      <td class="client-submitted-date">2024-10-15</td> <!-- Client submitted date -->
+      <td class="submitted-date">N/A</td> <!-- Not submitted by admin -->
       <td class="pending-days"></td>
       <td class="action-buttons">
         <button class="accept" onclick="acceptRequest(124)">Accept</button>
         <button class="reject" onclick="rejectRequest(124)">Reject</button>
+      </td>
+    </tr>
+    <tr>
+      <td>125</td>
+      <td>Request Title C</td>
+      <td class="client-submitted-date">2024-10-20</td> <!-- Client submitted date -->
+      <td class="submitted-date">N/A</td> <!-- Not submitted by admin -->
+      <td class="pending-days"></td>
+      <td class="action-buttons">
+        <button class="accept" onclick="acceptRequest(125)">Accept</button>
+        <button class="reject" onclick="rejectRequest(125)">Reject</button>
       </td>
     </tr>
   </table>
@@ -148,23 +162,37 @@
     const rows = document.querySelectorAll("table.table tr");
     rows.forEach(row => {
       const submittedDateElement = row.querySelector(".submitted-date");
+      const clientSubmittedDateElement = row.querySelector(".client-submitted-date");
       const pendingDaysElement = row.querySelector(".pending-days");
       const actionButtons = row.querySelector(".action-buttons");
 
       if (submittedDateElement && pendingDaysElement) {
-        const submittedDate = new Date(submittedDateElement.innerText);
-        const currentDate = new Date();
-        const pendingDays = Math.floor((currentDate - submittedDate) / (1000 * 60 * 60 * 24));
-        
-        pendingDaysElement.innerText = pendingDays >= 0 ? pendingDays + " days" : "N/A";
+        const submittedDateText = submittedDateElement.innerText;
+        const clientSubmittedDateText = clientSubmittedDateElement.innerText;
 
-        // Enable/disable buttons based on pending days
-        if (pendingDays > 0) {
-          actionButtons.querySelector(".accept").disabled = false;
-          actionButtons.querySelector(".reject").disabled = false;
-        } else {
+        if (submittedDateText === "N/A") {
+          const clientSubmittedDate = new Date(clientSubmittedDateText);
+          const currentDate = new Date();
+          const pendingDays = Math.floor((currentDate - clientSubmittedDate) / (1000 * 60 * 60 * 24));
+
+          pendingDaysElement.innerText = pendingDays >= 0 ? pendingDays + " days" : "Pending"; // Calculate pending days
           actionButtons.querySelector(".accept").disabled = true;
           actionButtons.querySelector(".reject").disabled = true;
+        } else {
+          const submittedDate = new Date(submittedDateText);
+          const currentDate = new Date();
+          const pendingDays = Math.floor((currentDate - submittedDate) / (1000 * 60 * 60 * 24));
+
+          pendingDaysElement.innerText = pendingDays >= 0 ? pendingDays + " days" : "N/A";
+
+          // Enable/disable buttons based on pending days
+          if (pendingDays > 0) {
+            actionButtons.querySelector(".accept").disabled = false;
+            actionButtons.querySelector(".reject").disabled = false;
+          } else {
+            actionButtons.querySelector(".accept").disabled = true;
+            actionButtons.querySelector(".reject").disabled = true;
+          }
         }
       }
     });
@@ -175,6 +203,9 @@
     if (confirm("Are you sure you want to accept request " + id + "?")) {
       alert("Request " + id + " has been accepted.");
       // Further code for backend update could go here
+      // Update the UI to reflect the acceptance
+      const actionButtons = document.querySelector(`tr td:contains('${id}')`).parentElement.querySelector(".action-buttons");
+      actionButtons.innerHTML = "Accepted"; // Update UI to show accepted status
     }
   }
 
@@ -182,6 +213,9 @@
     if (confirm("Are you sure you want to reject request " + id + "?")) {
       alert("Request " + id + " has been rejected.");
       // Further code for backend update could go here
+      // Update the UI to reflect the rejection
+      const actionButtons = document.querySelector(`tr td:contains('${id}')`).parentElement.querySelector(".action-buttons");
+      actionButtons.innerHTML = "Rejected"; // Update UI to show rejected status
     }
   }
 </script>
