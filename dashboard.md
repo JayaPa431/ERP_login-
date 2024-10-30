@@ -68,6 +68,13 @@
   .accept { background-color: #28a745; }
   .reject { background-color: #dc3545; }
 
+  /* Notes icon styles */
+  .notes-icon {
+    cursor: pointer;
+    color: #007bff;
+    font-size: 20px;
+  }
+
   /* Footer styles */
   .footer {
     display: flex;
@@ -106,44 +113,48 @@
     <tr>
       <th>Form No</th>
       <th>Title</th>
-      <th>Client Submitted Date</th> <!-- New column for Client Submitted Date -->
-      <th>Submitted Date</th> <!-- Admin Submitted Date -->
+      <th>Client Submitted Date</th>
+      <th>Submitted Date</th>
       <th>Pending Days</th>
       <th>Actions</th>
+      <th>Notes</th> <!-- New Notes Column -->
     </tr>
     <!-- Example rows with placeholder dates -->
     <tr>
       <td>123</td>
       <td>Request Title A</td>
-      <td class="client-submitted-date">2024-10-01</td> <!-- Client submitted date -->
-      <td class="submitted-date">2024-10-10</td> <!-- Admin submitted date -->
+      <td class="client-submitted-date">2024-10-01</td>
+      <td class="submitted-date">2024-10-10</td>
       <td class="pending-days"></td>
       <td class="action-buttons">
         <button class="accept" onclick="acceptRequest(123)">Accept</button>
-        <button class="reject" onclick="rejectRequest(124)">Reject</button>
+        <button class="reject" onclick="rejectRequest(123)">Reject</button>
       </td>
+      <td><span class="notes-icon" onclick="openNotes(123)">📝</span></td> <!-- Notes Icon -->
     </tr>
     <tr>
       <td>124</td>
       <td>Request Title B</td>
-      <td class="client-submitted-date">2024-10-15</td> <!-- Client submitted date -->
-      <td class="submitted-date">N/A</td> <!-- Not submitted by admin -->
+      <td class="client-submitted-date">2024-10-15</td>
+      <td class="submitted-date">N/A</td>
       <td class="pending-days"></td>
       <td class="action-buttons">
         <button class="accept" onclick="acceptRequest(124)">Accept</button>
         <button class="reject" onclick="rejectRequest(124)">Reject</button>
       </td>
+      <td><span class="notes-icon" onclick="openNotes(124)">📝</span></td> <!-- Notes Icon -->
     </tr>
     <tr>
       <td>125</td>
       <td>Request Title C</td>
-      <td class="client-submitted-date">2024-10-20</td> <!-- Client submitted date -->
-      <td class="submitted-date">N/A</td> <!-- Not submitted by admin -->
+      <td class="client-submitted-date">2024-10-20</td>
+      <td class="submitted-date">N/A</td>
       <td class="pending-days"></td>
       <td class="action-buttons">
         <button class="accept" onclick="acceptRequest(125)">Accept</button>
         <button class="reject" onclick="rejectRequest(125)">Reject</button>
       </td>
+      <td><span class="notes-icon" onclick="openNotes(125)">📝</span></td> <!-- Notes Icon -->
     </tr>
   </table>
 </div>
@@ -175,7 +186,7 @@
           const currentDate = new Date();
           const pendingDays = Math.floor((currentDate - clientSubmittedDate) / (1000 * 60 * 60 * 24));
 
-          pendingDaysElement.innerText = pendingDays >= 0 ? pendingDays + " days" : "Pending"; // Calculate pending days
+          pendingDaysElement.innerText = pendingDays >= 0 ? pendingDays + " days" : "Pending";
           actionButtons.querySelector(".accept").disabled = true;
           actionButtons.querySelector(".reject").disabled = true;
         } else {
@@ -202,21 +213,32 @@
   function acceptRequest(id) {
     if (confirm("Are you sure you want to accept request " + id + "?")) {
       alert("Request " + id + " has been accepted.");
-      // Further code for backend update could go here
       // Update the UI to reflect the acceptance
-      const actionButtons = document.querySelector(`tr td:contains('${id}')`).parentElement.querySelector(".action-buttons");
-      actionButtons.innerHTML = "Accepted"; // Update UI to show accepted status
+      updateRequestStatus(id, "Accepted");
     }
   }
 
   function rejectRequest(id) {
     if (confirm("Are you sure you want to reject request " + id + "?")) {
       alert("Request " + id + " has been rejected.");
-      // Further code for backend update could go here
       // Update the UI to reflect the rejection
-      const actionButtons = document.querySelector(`tr td:contains('${id}')`).parentElement.querySelector(".action-buttons");
-      actionButtons.innerHTML = "Rejected"; // Update UI to show rejected status
+      updateRequestStatus(id, "Rejected");
     }
+  }
+
+  // Function to update request status in the UI
+  function updateRequestStatus(id, status) {
+    const row = document.querySelector(`tr td:first-child:contains('${id}')`).parentElement;
+    const actionButtons = row.querySelector(".action-buttons");
+    actionButtons.innerHTML = status; // Update to show Accepted or Rejected
+    row.querySelector(".accept").disabled = true; // Disable buttons
+    row.querySelector(".reject").disabled = true; // Disable buttons
+  }
+
+  // Function to open notes section for the specific request
+  function openNotes(id) {
+    alert("Open notes for request " + id);
+    // Further implementation for opening notes could go here
   }
 </script>
 
