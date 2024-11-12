@@ -1,126 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notes - Admin Dashboard</title>
-    <style>
-        /* Basic styles */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-        }
-
-        .header .logout {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        .form-container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        label {
-            display: block;
-            margin: 10px 0 5px;
-        }
-
-        input, textarea, button {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        button {
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-            border: none;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login</title>
+  <style>
+    /* Basic styles for login */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+    }
+    .login-box {
+      background-color: #fff;
+      padding: 49px;
+      width: 300px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .login-box h2 {
+      margin-bottom: 20px;
+    }
+    .login-box input[type="text"],
+    .login-box input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .login-box button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .captcha {
+      font-weight: bold;
+      letter-spacing: 2px;
+      background-color: #eee;
+      display: inline-block;
+      padding: 10px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
 
-<!-- Header -->
-<div class="header">
-    <div>
-        <a href="dashboard.html" style="color: white;">Back to Dashboard</a>
-    </div>
-    <div>
-        <span>Name: <span id="admin-name">Admin Name</span></span> | 
-        <span>UserID: <span id="admin-id">AdminID</span></span> | 
-        <a href="login.html" class="logout">Logout</a>
-    </div>
-</div>
-
-<!-- Notes Form -->
-<div class="form-container">
-    <h2>Add Notes</h2>
-    <form id="notes-form">
-        <label for="request-id">Request ID:</label>
-        <input type="text" id="request-id" name="request-id" required>
-        
-        <label for="reason">Reason (Accepted/Rejected):</label>
-        <textarea id="reason" name="reason" rows="4" required></textarea>
-        
-        <label for="timestamp">Timestamp:</label>
-        <input type="text" id="timestamp" name="timestamp" readonly>
-        
-        <label for="admin-name">Admin Name:</label>
-        <input type="text" id="admin-name-input" name="admin-name" readonly>
-
-        <label for="admin-id">Admin UserID:</label>
-        <input type="text" id="admin-id-input" name="admin-id" readonly>
-
-        <button type="submit">Save Notes</button>
-    </form>
+<div class="login-box">
+  <h2>Admin Login</h2>
+  <input type="text" id="username" placeholder="Username" required>
+  <input type="password" id="password" placeholder="Password" required>
+  <button id="loginButton" onclick="login()">Login</button>
+  <p id="attemptsMessage" style="color: red;"></p>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Get the current date and time for the timestamp
-        const now = new Date();
-        const timestamp = now.toLocaleString(); // Format as needed
-        document.getElementById("timestamp").value = timestamp;
+  async function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const attemptsMessage = document.getElementById('attemptsMessage');
 
-        // Auto-fill admin name and ID (this should come from session or state)
-        document.getElementById("admin-name-input").value = "Admin Name"; // Replace with dynamic value
-        document.getElementById("admin-id-input").value = "AdminID"; // Replace with dynamic value
+    // Get CSRF token from the cookie
+    const csrfToken = getCookie('csrf_token');
 
-        // Handle form submission
-        document.getElementById("notes-form").addEventListener("submit", function(event) {
-            event.preventDefault();
-            // Here, you would typically send the data to your server or handle it as needed
-            alert("Notes saved successfully for Request ID: " + document.getElementById("request-id").value);
-            // Redirect to the dashboard or clear the form as needed
-        });
-    });
+    try {
+      // Send login request to the backend with CSRF token in the headers
+      const response = await fetch('http://127.0.0.1:5000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken // Include the CSRF token in the headers
+        },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Login Successful');
+        window.location.href = 'dashboard.html'; // Redirect to dashboard page
+      } else {
+        attemptsMessage.textContent = data.error || "Login failed. Try again.";
+      }
+    } catch (error) {
+      attemptsMessage.textContent = "Error connecting to server.";
+    }
+  }
+
+  // Function to get a cookie by name
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
 </script>
 
 </body>
