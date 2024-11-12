@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}"> <!-- CSRF Token -->
+  <title>Admin Dashboard</title>
+  <style>
+    /* Basic styles */
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+    .header { display: flex; justify-content: space-between; padding: 10px 20px; background-color: #007bff; color: white; }
+    .content { padding: 20px; }
+    .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .table th, .table td { padding: 12px; border: 1px solid #ddd; text-align: center; }
+    .table th { background-color: #007bff; color: white; }
+    .action-buttons button { padding: 5px 10px; border: none; border-radius: 4px; color: white; cursor: pointer; }
+    .accept { background-color: #28a745; }
+    .reject { background-color: #dc3545; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div><a href="login.html" class="logout">Logout</a></div>
+</div>
+
+<div class="content">
+  <h2>Admin Dashboard - Request Status</h2>
+  <table class="table" id="requestsTable">
+    <tr>
+      <th>Form No</th>
+      <th>Title</th>
+      <th>Client Submitted Date</th>
+      <th>Submitted Date</th>
+      <th>Pending Days</th>
+      <th>Actions</th>
+    </tr>
+  </table>
+</div>
+
+<script>
+  // Ensure admin is authenticated
+  if (!sessionStorage.getItem('auth_token')) {
+    alert('You are not authenticated! Please log in.');
+    window.location.href = '/login';  // Redirect to login page if not authenticated
+  }
+
+  // Fetch and display requests
+  async function loadRequests() {
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      const response = await fetch('http://127.0.0.1:5000/requests', {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + sessionStorage.getItem('auth_token'),  // Include auth token
+          'X-CSRFToken': csrfToken  // Include CSRF token if required by the backend
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert('Error: ' + errorData.error || 'Unable to fetch requests');
+        return;
+      }
+
+      const requests = await response.json();
+      const table = document.getElementById('requestsTable');
+
+      requests.forEach(req => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${req.id}</td>
+          <td>${req.title}</td>
+          <td>${req.client_submitted_date}</td>
+          <td>${req.submitted_date || "N/A"}</td>
+          <td>${req.pending_days || "Pending"}</td>
+          <td>
+            <button class="accept" onclick="acceptRequest(${req.id})">Accept</button>
+            <button class="reject" onclick="rejectRequest(${req.id})">Reject</button>
+          </td>
+        `;
+        table.appendChild(row);
+      });
+    } catch (error) {
+      alert('Error connecting to the server: ' + error.message);
+    }
+  }
+
+  // Accept request
+  async function acceptRequest(id) {
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      const response = await fetch(`http://127.0.0.1:5000/requests/${id}/accept`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + sessionStorage.getItem('auth_token'),  // Include auth token
+          'X-CSRFToken': csrfToken  // Include CSRF token
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert('Error: ' + errorData.error || 'Unable to accept request');
+        return;
+      }
+
+      alert(`Request ${id} accepted`);
+      location.reload();  // Reload the page to update the status
+    } catch (error) {
+      alert('Error connecting to the server: ' + error.message);
+    }
+  }
+
+  // Reject request
+  async function rejectRequest(id) {
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      const response = await fetch(`http://127.0.0.1:5000/requests/${id}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + sessionStorage.getItem('auth_token'),  // Include auth token
+          'X-CSRFToken': csrfToken  // Include CSRF token
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert('Error: ' + errorData.error || 'Unable to reject request');
+        return;
+      }
+
+      alert(`Request ${id} rejected`);
+      location.reload();  // Reload the page to update the status
+    } catch (error) {
+      alert('Error connecting to the server: ' + error.message);
+    }
+  }
+
+  loadRequests();  // Call function to load the requests
+</script>
+
+</body>
+</html>
